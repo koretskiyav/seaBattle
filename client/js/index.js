@@ -6,8 +6,10 @@ for (var i = 0; i < 100; i++) {
     data.push({ 'status': 'void' });
 };
 
+// data[54] = data[55] = data[56] = {'status': 'ship'};
+
 var Cell = React.createClass({
-  render: function() {
+                                                                                                                                            render: function() {
     return (
       <div className={this.props.status}></div>
     );

@@ -15,3 +15,11 @@
     border: 1px solid #aaa;
     float: left;
 }
+
+.ship {
+    height: 28px;
+    width: 28px;
+    border: 1px solid #aaa;
+    float: left;
+    background: #888;
+}
