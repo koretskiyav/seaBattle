@@ -8,34 +8,36 @@ for (var i = 0; i < 100; i++) {
 
 
 var Cell = React.createClass({
-  onClick: function(i) {
-    return function(e) {
-      data[i] = {'status': 'ship'};
-      console.log(i, data[i]);
-    }.bind(this)
+  handleClick: function(e) {
+    if (this.props.onClick) this.props.onClick(e);
   },
+
   render: function() {
     return (
-      <div className={this.props.status} data-id={this.props.id} onClick={this.onClick(this.props.id)}></div>
+      <div className={this.props.status} onClick={this.handleClick}></div>
     );
   }
 });
 
 var Field = React.createClass({
 
+  handleCellClick: function(i, e) {
+      console.log(i, e);
+  },
+
   getInitialState : function() {
     return {value: data};
   },
 
   render: function() {
-    var cellNode = this.state.value.map(function(item, index) {
+    var cellNodes = this.state.value.map(function(item, index) {
       return (
-        <Cell status={item.status} id={index}/>
+        <Cell status={item.status} onClick={this.handleCellClick.bind(this, item)}/>
       );
     });
     return (
       <div className="field">
-        {cellNode}
+        {cellNodes}
       </div>
     );
   }
