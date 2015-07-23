@@ -1,12 +1,5 @@
 var mountNode = document.getElementById('content');
 
-var data = [];
-
-for (var i = 0; i < 100; i++) {
-    data.push({ 'status': 'void' });
-};
-
-
 var Cell = React.createClass({
   handleClick: function(e) {
     if (this.props.onClick) this.props.onClick(e);
@@ -21,12 +14,18 @@ var Cell = React.createClass({
 
 var Field = React.createClass({
 
-  handleCellClick: function(i, e) {
-      console.log(i, e);
+  getInitialState : function() {
+  var data = [];
+
+  for (var i = 0; i < 100; i++) {
+      data.push({ 'status': 'void' });
+  };
+    return {value: data};
   },
 
-  getInitialState : function() {
-    return {value: data};
+  handleCellClick: function(i, e) {
+    this.state.value[this.state.value.indexOf(i)].status = 'ship' // подключить lodash и заменить
+    this.setState(this.state.value);
   },
 
   render: function() {
@@ -34,7 +33,8 @@ var Field = React.createClass({
       return (
         <Cell status={item.status} onClick={this.handleCellClick.bind(this, item)}/>
       );
-    });
+    }.bind(this));
+
     return (
       <div className="field">
         {cellNodes}
