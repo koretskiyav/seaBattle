@@ -3,14 +3,11 @@ var path            = require('path'); // модуль для парсинга �
 var routes          = require('./routes');
 var config          = require('./libs/config');
 var log             = require('./libs/log')(module);
+var Games           = require('./libs/mongoose').Games;
 
 var app = module.exports = express.createServer();
 
-// Configuration
-
 app.configure(function(){
-  // app.set('views', __dirname + '/views');
-  // app.set('view engine', 'jade');
   app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(app.router);
@@ -27,8 +24,6 @@ app.configure('production', function(){
 
 // Routes
 
-// app.get('/', routes.index);
-
 app.use(function(req, res, next){
     res.status(404);
     log.debug('Not found URL: %s',req.url);
@@ -43,12 +38,32 @@ app.use(function(err, req, res, next){
     return;
 });
 
-app.get('/gameID', function(req, res) {
+app.get('/users/:name', function(req, res) {
     res.send('This is not implemented now');
-});
+/*    return GameModel.find(function(err, name))
+    // console.log(req.params.id);
+    res.send(req.params.name);
+*/});
 
-app.post('/gameID', function(req, res) {
-    res.send('This is not implemented now');
+app.post('/users/:name', function(req, res) {
+    var game = new Games({
+        users: {
+            name: req.params.name,
+            ships: [],
+            moves: []
+        }
+    });
+
+    game.save(function(err) {
+           if (!err) {
+            log.info("game created");
+            return res.send({ status: 'OK', game:game });
+        } else {
+            res.statusCode = 500;
+            res.send({ error: 'Server error' });
+        }
+        log.error('Internal error(%d): %s',res.statusCode,err.message);
+    })
 });
 
 app.put('/gameID', function (req, res){

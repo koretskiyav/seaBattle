@@ -16,19 +16,18 @@ db.once('open', function callback () {
 var Schema = mongoose.Schema;
 
 // Schemas
-var Games = new Schema({
-    gameID: String,
-    users: {
+var gameSchema = new Schema({
+    users: [{
         name: String,
-        ships: [String]
-    },
-    moves: [
-    {
-        user: String,
-        move: String
+        ships: [String],
+        moves: [String]
     }]
 });
 
-var ArticleModel = mongoose.model('Article', Article);
+gameSchema.static.findByName = function(name, cb) {
+    return this.find({users: [{ name : name}]}, cb);
+}
 
-module.exports.ArticleModel = ArticleModel;
+var Games = mongoose.model('Games', gameSchema);
+
+module.exports.Games = Games;

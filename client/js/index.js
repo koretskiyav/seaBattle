@@ -24,7 +24,12 @@ var Field = React.createClass({
   },
 
   handleCellClick: function(i, e) {
-    this.state.value[this.state.value.indexOf(i)].status = 'ship' // подключить lodash и заменить
+    $.post('../users/' + this.state.value.indexOf(i))
+      .done(function(data) {
+        console.log(data);
+      });
+    var curCell = this.state.value[this.state.value.indexOf(i)];
+    curCell.status = curCell.status === 'ship' ? 'void' : 'ship';
     this.setState(this.state.value);
   },
 
