@@ -24,10 +24,6 @@ var gameSchema = new Schema({
     }]
 });
 
-gameSchema.static.findByName = function(name, cb) {
-    return this.find({users: [{ name : name}]}, cb);
-}
-
 var Games = mongoose.model('Games', gameSchema);
 
 module.exports.Games = Games;

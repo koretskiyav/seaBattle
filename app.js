@@ -1,4 +1,5 @@
 var express         = require('express');
+var _               = require('lodash');
 var path            = require('path'); // модуль для парсинга пути
 var routes          = require('./routes');
 var config          = require('./libs/config');
@@ -39,11 +40,50 @@ app.use(function(err, req, res, next){
 });
 
 app.get('/users/:name', function(req, res) {
-    res.send('This is not implemented now');
-/*    return GameModel.find(function(err, name))
-    // console.log(req.params.id);
-    res.send(req.params.name);
-*/});
+   return Games.find(null,
+    function (err, Games) {
+        if (!err) {
+
+            var myOldGames = _.compact(Games.map(function(game) {
+              if (game.users[1]
+                && (game.users[0].name === req.params.name
+                ||  game.users[1].name === req.params.name))
+              return {
+                'id' : game._id,
+                'user1' : game.users[0].name,
+                'user2' : game.users[1].name
+               }
+            }));
+
+            var myCreatetGames = _.compact(Games.map(function(game) {
+              if (!game.users[1]
+                && game.users[0].name === req.params.name)
+              return {
+                'id' : game._id,
+                'user1' : game.users[0].name
+               }
+            }));
+
+            var freeJoinGames = _.compact(Games.map(function(game) {
+              if (!game.users[1]
+                && game.users[0].name !== req.params.name)
+              return {
+                'id' : game._id,
+                'user1' : game.users[0].name
+               }
+            }));
+            return res.send({ status: 'OK', Games: {
+                myOldGames : myOldGames,
+                myCreatetGames : myCreatetGames,
+                freeJoinGames : freeJoinGames
+            }});
+        } else {
+            res.statusCode = 500;
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            return res.send({ error: 'Server error' });
+        }
+    });
+ });
 
 app.post('/users/:name', function(req, res) {
     var game = new Games({
