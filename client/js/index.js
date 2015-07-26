@@ -1,24 +1,40 @@
+$.put = function(url, data, callback, type){
+
+  if ( $.isFunction(data) ){
+    type = type || callback,
+    callback = data,
+    data = {}
+  }
+
+  return $.ajax({
+    url: url,
+    type: 'PUT',
+    success: callback,
+    data: data,
+    contentType: type
+  });
+}
+
 var mountNode = document.getElementById('content');
 
 var GameList = React.createClass({
 
-  handleClick: function(e) {
-    console.log(e.target.innerHTML);
+  handleClick: function(index) {
+    $.put('../users/' + this.props.user + '/game/' + this.props.games[index].id)
+      .done(function(data) {
+        console.log(data);
+      }.bind(this));
+
+    // console.log(this.props.games[index].id, this.props.user);
   },
 
   render: function() {
-
-    var liNodes = this.props.games.map(function(game) {
-      var gameString = 'game: ' + game.id + ' user1: ' + game.user1 + ' user2: ' + game.user2
-
+    var liNodes = this.props.games.map(function(game, index) {
       return (
-        <li onClick={this.handleClick.bind(this)}>{gameString}</li>
+        <li onClick={this.handleClick.bind(this, index)}>{game}</li>
       )
     }.bind(this));
-
-    return (
-      <ul>{liNodes}</ul>
-    );
+    return <ul>{liNodes}</ul>;
   }
 });
 
@@ -50,11 +66,11 @@ var StartGame = React.createClass({
   },
 
   createNewGame: function() {
-    // $.post('../users/' + this.state.user)
-    //   .done(function(data) {
-    //     console.log(data);
-    //   });
-    console.log(this.state);
+    $.post('../users/' + this.state.user)
+      .done(function(data) {
+        this.state.myCreatetGames.push(data.game);
+        this.setState(this.state);
+      }.bind(this));
   },
 
   render: function() {
@@ -67,12 +83,27 @@ var StartGame = React.createClass({
         </form>
         <div>
           <button onClick={this.createNewGame}>Create new game</button>
-          <h4>You have not completed the games:</h4>
-          <GameList games={this.state.myOldGames} />
-          <h4>You previously created games:</h4>
-          <GameList games={this.state.myCreatetGames} />
-          <h4>Games that you can join:</h4>
-          <GameList games={this.state.freeJoinGames} />
+          {this.state.myOldGames !== [] ?
+            <div>
+              <h4>You have not completed the games:</h4>
+              <GameList games={this.state.myOldGames} user={this.state.user} />
+            </div>
+            : null
+          }
+          {this.state.myCreatetGames !== [] ?
+            <div>
+              <h4>You have not completed the games:</h4>
+              <GameList games={this.state.myCreatetGames} user={this.state.user} />
+            </div>
+            : null
+          }
+          {this.state.freeJoinGames !== [] ?
+            <div>
+              <h4>You have not completed the games:</h4>
+              <GameList games={this.state.freeJoinGames} user={this.state.user} />
+            </div>
+            : null
+          }
         </div>
       </div>
     );
