@@ -163,23 +163,33 @@ app.get('/game/:game', function(req, res) {
     });
 });
 
+app.post('/users/:name/game/:game/place/:place', function(req, res) {
+   return Games.findById(req.params.game, function (err, game) {
+        if(!game) {
+            res.statusCode = 404;
+            return res.send({ error: 'Not found' });
+        }
 
-/*
-app.ws('/', function(ws, req) {
-  ws.on('message', function(msg) {
-    console.log(msg);
-  });
-  console.log('socket', req.testing);
-});
-*/
-/*app.put('/gameID', function (req, res){
-    res.send('This is not implemented now');
-});
+        var curPlayer = _.find(game.users, {'name': req.params.name});
 
-app.delete('/gameID', function (req, res){
-    res.send('This is not implemented now');
+        var place = curPlayer.ships.indexOf(req.params.place);
+        if (place === -1) {
+            curPlayer.ships.push(req.params.place);
+        } else {
+            curPlayer.ships = _.without(curPlayer.ships, req.params.place);
+        }
+        game.save(function(err) {
+            if (!err) {
+                log.info("ships updated");
+                return res.send({ status: 'OK', ships: curPlayer.ships});
+            } else {
+                res.statusCode = 500;
+                res.send({ error: 'Server error' });
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+            }
+        });
+    });
 });
-*/
 
 app.listen(config.get('port'), function(){
     log.info('Express server listening on port ' + config.get('port'));
