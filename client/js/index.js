@@ -17,15 +17,44 @@ $.put = function(url, data, callback, type){
 
 var mountNode = document.getElementById('content');
 
+var GlobalDiv = React.createClass({
+
+  getInitialState: function() {
+    return {
+      status: 'start',
+      user: null,
+      myOldGames: [],
+      myCreatetGames:[],
+      freeJoinGames: []
+    };
+  },
+
+  render: function() {
+    if (this.state.status === 'start') {
+        return <StartGame />
+    }
+  }
+});
+
 var GameList = React.createClass({
+
+  waitGame: function(game) {
+    var wait = setInterval(function() {
+        $.get('../game/' + game)
+          .done(function(data) {
+            if (data.status === 'OK') {
+              console.log('GO!');
+              clearInterval(wait);
+            }
+          });
+    }, 1000);
+  },
 
   handleClick: function(index) {
     $.put('../users/' + this.props.user + '/game/' + this.props.games[index].id)
       .done(function(data) {
-        console.log(data);
+        this.waitGame(this.props.games[index].id);
       }.bind(this));
-
-    // console.log(this.props.games[index].id, this.props.user);
   },
 
   render: function() {
@@ -158,4 +187,4 @@ var Field = React.createClass({
   }
 });
 
-React.render(<StartGame />, mountNode);
+React.render(<GlobalDiv />, mountNode);

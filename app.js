@@ -114,12 +114,10 @@ app.put('/users/:name/game/:game', function(req, res) {
             res.statusCode = 404;
             return res.send({ error: 'Not found' });
         }
-
-        if (!_.find(runGames, {id: game._id})) {
+       if (!_.find(runGames, {id: game._id})) {
             runGames.push({id: game._id, user1: null, user2: null});
         }
         var curGame = _.find(runGames, {'id': game._id});
-
         if (game.users[0].name !== req.params.name && !game.users[1]) {
             game.users.push({
                 name: req.params.name,
@@ -135,7 +133,7 @@ app.put('/users/:name/game/:game', function(req, res) {
         game.save(function(err) {
             if (!err) {
                 log.info("game updated");
-                return res.send({ status: 'OK'});
+                return res.send({ status: 'OK', runGames: runGames});
             } else {
                 res.statusCode = 500;
                 res.send({ error: 'Server error' });
@@ -144,6 +142,27 @@ app.put('/users/:name/game/:game', function(req, res) {
         });
     });
 });
+
+app.get('/game/:game', function(req, res) {
+   return Games.findById(req.params.game, function (err, game) {
+        if(!game) {
+            res.statusCode = 404;
+            return res.send({ error: 'Not found' });
+        }
+        var curGame = _.find(runGames, {'id': game._id});
+        if(!curGame) {
+            res.statusCode = 404;
+            return res.send({ error: 'Not found' });
+        }
+        if (curGame.user1 === 'ok' && curGame.user2 === 'ok') {
+            log.info("game started!");
+            return res.send({ status: 'OK', game: curGame});
+        } else {
+            return res.send({ status: 'wait', game: curGame});
+        }
+    });
+});
+
 
 /*
 app.ws('/', function(ws, req) {
