@@ -1,29 +1,10 @@
-$.put = function(url, data, callback, type){
-
-  if ( $.isFunction(data) ){
-    type = type || callback,
-    callback = data,
-    data = {}
-  }
-
-  return $.ajax({
-    url: url,
-    type: 'PUT',
-    success: callback,
-    data: data,
-    contentType: type
-  });
-}
-
 var mountNode = document.getElementById('content');
-
 
 var GlobalDiv = React.createClass({
 
   getInitialState: function() {
 
     var data = [];
-
     for (var i = 0; i < 100; i++) {
         data.push('void');
     };
@@ -64,7 +45,7 @@ var GameList = React.createClass({
   },
 
   handleClick: function(index) {
-    $.put('../users/' + this.props.self.state.user + '/game/' + this.props.games[index].id)
+    $.post('../users/' + this.props.self.state.user + '/game/' + this.props.games[index].id)
       .done(function(data) {
         this.props.self.state.game = this.props.games[index].id;
         this.props.self.setState(this.props.self.state);
@@ -192,8 +173,31 @@ var Field = React.createClass({
 });
 
 var ShipsPlacement = React.createClass({
+
+  handleClick: function() {
+    $.get('../users/' + this.props.self.state.user + '/game/' + this.props.self.state.game)
+      .done(function(data) {
+        console.log(data);
+        console.log(this);
+/*        for (var i = 0; i < ships.length; i++) {
+            if (data.ships.indexOf(i.toString()) === -1) {
+                ships[i] = 'void'
+            } else {
+                ships[i] = 'ship'
+            }
+        };
+*/        // console.log(data.ships);
+        // this.props.self.setState(this.props.self.state);
+      }.bind(this));
+    },
+
   render: function() {
-    return <Field self={this.props.self} />
+    return (
+        <div>
+            <button onClick={this.handleClick.bind(this)}>I am ready to fight!</button>
+            <Field self={this.props.self} />
+        </div>
+    );
   }
 });
 

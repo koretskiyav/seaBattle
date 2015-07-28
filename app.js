@@ -108,7 +108,7 @@ app.post('/users/:name', function(req, res) {
     })
 });
 
-app.put('/users/:name/game/:game', function(req, res) {
+app.post('/users/:name/game/:game', function(req, res) {
    return Games.findById(req.params.game, function (err, game) {
         if(!game) {
             res.statusCode = 404;
@@ -182,6 +182,39 @@ app.post('/users/:name/game/:game/place/:place', function(req, res) {
             if (!err) {
                 log.info("ships updated");
                 return res.send({ status: 'OK', ships: curPlayer.ships});
+            } else {
+                res.statusCode = 500;
+                res.send({ error: 'Server error' });
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+            }
+        });
+    });
+});
+
+app.get('/users/:name/game/:game', function(req, res) {
+   return Games.findById(req.params.game, function (err, game) {
+        if(!game) {
+            res.statusCode = 404;
+            return res.send({ error: 'Not found' });
+        }
+        var curGame = _.find(runGames, {'id': game._id});
+        if(!curGame) {
+            res.statusCode = 404;
+            return res.send({ error: 'Not found' });
+        }
+        if (game.users[0].name == req.params.name) {
+            curGame.user1 = 'ready';
+        } else if (game.users[1].name == req.params.name) {
+            curGame.user2 = 'ready';
+        } else {
+            res.statusCode = 500;
+            res.send({ error: 'Server error' });
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+        }
+        game.save(function(err) {
+            if (!err) {
+                log.info('game ready');
+                return res.send({ status: 'OK', curGame: curGame});
             } else {
                 res.statusCode = 500;
                 res.send({ error: 'Server error' });
