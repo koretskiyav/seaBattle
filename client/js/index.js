@@ -4,75 +4,83 @@ var GlobalDiv = React.createClass({
 
   getInitialState: function() {
 
-    var data = [];
-    for (var i = 0; i < 100; i++) {
-        data.push('void');
-    };
-
     return {
       status: 'start',
       user: '',
       game: '',
-      myShips: data,
-      myOldGames: [],
-      myCreatetGames:[],
-      freeJoinGames: []
+      myShips: [],
+      enemyShips: [],
+      games: [],
     };
   },
 
   render: function() {
     if (this.state.status === 'start') {
         return <StartGame self={this} />
+    } else if (this.state.status === 'wait2nd') {
+        return <div>Waiting 2nd player...</div>
     } else if (this.state.status === 'placement') {
         return <ShipsPlacement self={this} />
+    } else if (this.state.status === 'fight') {
+        return <BattleField self={this} />
     }
   }
-});
+ });
 
 var GameList = React.createClass({
 
-  waitGame: function(game) {
+  waitGame: function() {
+    var game = this.props.self.state.game;
     var wait = setInterval(function() {
         $.get('../game/' + game)
           .done(function(data) {
-            if (data.status === 'OK') {
+            if (data.game.users[0].status === 'ready'
+             && data.game.users[1].status === 'ready') {
               clearInterval(wait);
-              this.props.self.setState({status: 'placement'});
-              // console.log(this.props.self.state);
+              this.props.self.setState({status: data.game.status});
             }
           }.bind(this));
     }.bind(this), 1000);
   },
 
   handleClick: function(index) {
-    $.post('../users/' + this.props.self.state.user + '/game/' + this.props.games[index].id)
+
+    var user = this.props.self.state.user;
+    var games = this.props.self.state.games;
+    var game = games[index].id;
+
+    $.post('../users/' + user + '/game/' + game)
       .done(function(data) {
-        this.props.self.state.game = this.props.games[index].id;
-        this.props.self.setState(this.props.self.state);
-        this.waitGame(this.props.games[index].id);
+        this.props.self.setState({game: data.game.id});
+        if (data.game.users[0].status === 'ready'
+         && data.game.users[1].status === 'ready') {
+           this.props.self.setState({status: data.game.status});
+        } else {
+            this.props.self.setState({status: 'wait2nd'});
+            this.waitGame();
+        }
       }.bind(this));
   },
 
   render: function() {
-    var liNodes = this.props.games.map(function(game, index) {
+    var games = this.props.self.state.games;
+    var liNodes = games.map(function(game, index) {
       return (
         <li onClick={this.handleClick.bind(this, index)}>{game}</li>
       )
     }.bind(this));
-    if (this.props.games !== []) {
-        return (
-            <div>
-                <h4>{this.props.title}</h4>
-                <ul>{liNodes}</ul>
-            </div>
-        )
-    }
+    return (
+        <div>
+            <h4>Available games:</h4>
+            <ul>{liNodes}</ul>
+        </div>
+    )
   }
-});
+ });
 
 var StartGame = React.createClass({
 
-    getInitialState: function() {
+  getInitialState: function() {
      return {};
    },
 
@@ -81,22 +89,18 @@ var StartGame = React.createClass({
   },
 
   handleSubmit: function(e) {
-    e.preventDefault();
+    if(e) e.preventDefault();
     $.get('../users/' + this.props.self.state.user)
       .done(function(data) {
-        this.props.self.setState({
-          myOldGames : data.Games.myOldGames,
-          myCreatetGames : data.Games.myCreatetGames,
-          freeJoinGames : data.Games.freeJoinGames
-        });
+        this.props.self.setState({games : data.games});
+        console.log(this.props.self.state.games);
       }.bind(this));
   },
 
   createNewGame: function() {
     $.post('../users/' + this.props.self.state.user)
       .done(function(data) {
-        this.props.self.state.myCreatetGames.push(data.game);
-        this.props.self.setState(this.props.self.state);
+        this.handleSubmit();
       }.bind(this));
   },
 
@@ -110,57 +114,49 @@ var StartGame = React.createClass({
         </form>
         <div>
           <button onClick={this.createNewGame}>Create new game</button>
-          <GameList
-                self={this.props.self}
-                games={this.props.self.state.myOldGames}
-                title={'You have not completed the games:'} />
-          <GameList
-                self={this.props.self}
-                games={this.props.self.state.myCreatetGames}
-                title={'You previously created games:'} />
-          <GameList
-                self={this.props.self}
-                games={this.props.self.state.freeJoinGames}
-                title={'Games that you can join:'} />
+          <GameList self={this.props.self} />
         </div>
       </div>
     );
   }
-});
+ });
 
 var Cell = React.createClass({
+
   handleClick: function(e) {
     if (this.props.onClick) this.props.onClick(e);
   },
+
   render: function() {
     return (
-      <div className={this.props.status} onClick={this.handleClick}></div>
+      <div className={this.props.status + " cell"} onClick={this.handleClick}></div>
     );
   }
-});
+ });
 
 var Field = React.createClass({
 
-  handleCellClick: function(i, e, z) {
-    var ships = this.props.self.state.myShips;
+  handleCellClick: function(i, e) {
+    if (this.props.flag === 'inert') return;
     $.post('../users/' + this.props.self.state.user + '/game/' + this.props.self.state.game + '/place/' + e)
       .done(function(data) {
-        for (var i = 0; i < ships.length; i++) {
-            if (data.ships.indexOf(i.toString()) === -1) {
-                ships[i] = 'void'
-            } else {
-                ships[i] = 'ship'
-            }
-        };
-        // console.log(data.ships);
-        this.props.self.setState(this.props.self.state);
+        this.props.self.setState({myShips: data.myShips});
+        console.log(data.myShips);
       }.bind(this));
   },
 
   render: function() {
-    var cellNodes = this.props.self.state.myShips.map(function(item, index) {
+
+    var cellShips = [];
+    var cell;
+    for (var i = 0; i < 100; i++) {
+        cell = _.find(this.props.ships, {id: i.toString()}) || {id: i.toString(), status: 'void'};
+        cellShips.push(cell);
+    };
+
+    var cellNodes = cellShips.map(function(item, index) {
       return (
-        <Cell status={item} onClick={this.handleCellClick.bind(this, item, index)}/>
+        <Cell status={item.status} onClick={this.handleCellClick.bind(this, item, index)}/>
       );
     }.bind(this));
 
@@ -170,35 +166,63 @@ var Field = React.createClass({
       </div>
     );
   }
-});
+ });
 
 var ShipsPlacement = React.createClass({
 
-  handleClick: function() {
-    $.get('../users/' + this.props.self.state.user + '/game/' + this.props.self.state.game)
-      .done(function(data) {
-        console.log(data);
-        console.log(this);
-/*        for (var i = 0; i < ships.length; i++) {
-            if (data.ships.indexOf(i.toString()) === -1) {
-                ships[i] = 'void'
-            } else {
-                ships[i] = 'ship'
+  waitFight: function() {
+    var game = this.props.self.state.game;
+
+    var wait = setInterval(function() {
+        $.get('../game/' + game)
+          .done(function(data) {
+            if (data.game.users[0].status === 'ready'
+             && data.game.users[1].status === 'ready') {
+              clearInterval(wait);
+              this.props.self.setState({status: data.game.status});
             }
-        };
-*/        // console.log(data.ships);
-        // this.props.self.setState(this.props.self.state);
+          }.bind(this));
+    }.bind(this), 1000);
+  },
+
+
+  handleClick: function(index) {
+
+    var user = this.props.self.state.user;
+    var game = this.props.self.state.game;
+
+    $.get('../users/' + user + '/game/' + game)
+      .done(function(data) {
+        if (data.game.users[0].status === 'ready'
+         && data.game.users[1].status === 'ready') {
+           this.props.self.setState({status: data.game.status});
+        } else {
+            this.props.self.setState({status: 'wait2nd'});
+            this.waitFight();
+        }
       }.bind(this));
-    },
+  },
 
   render: function() {
     return (
         <div>
             <button onClick={this.handleClick.bind(this)}>I am ready to fight!</button>
+            <Field self={this.props.self} ships = {this.props.self.state.myShips}/>
+        </div>
+    );
+  }
+ });
+
+var BattleField = React.createClass({
+
+  render: function() {
+    return (
+        <div>
+            <Field self={this.props.self} />
             <Field self={this.props.self} />
         </div>
     );
   }
-});
+ });
 
 React.render(<GlobalDiv />, mountNode);

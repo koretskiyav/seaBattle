@@ -17,10 +17,12 @@ var Schema = mongoose.Schema;
 
 // Schemas
 var gameSchema = new Schema({
+    status: String,
     users: [{
         name: String,
-        ships: [String],
-        moves: [String]
+        status: String,
+        ships: [],
+        moves: []
     }]
 });
 
