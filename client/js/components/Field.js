@@ -5,7 +5,6 @@ var Field = React.createClass({
   },
 
   render: function() {
-
     var cellNodes = this.props.ships.map(function(status, index) {
       return (
         <Cell status={status}

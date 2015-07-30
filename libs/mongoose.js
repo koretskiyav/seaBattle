@@ -21,8 +21,8 @@ var gameSchema = new Schema({
     users: [{
         name: String,
         status: String,
-        ships: [],
-        moves: []
+        ships: [String],
+        moves: [String]
     }]
 });
 
