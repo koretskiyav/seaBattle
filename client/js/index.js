@@ -14,202 +14,94 @@ var GlobalDiv = React.createClass({
     };
   },
 
-  render: function() {
-    if (this.state.status === 'start') {
-        return <StartGame self={this} />
-    } else if (this.state.status === 'wait2nd') {
-        return <div>Waiting 2nd player...</div>
-    } else if (this.state.status === 'placement') {
-        return <ShipsPlacement self={this} />
-    } else if (this.state.status === 'fight') {
-        return <BattleField self={this} />
-    }
-  }
- });
+  putShip: function(index) {
+    $.post('../users/' + this.state.user + '/game/' + this.state.game + '/place/' + index)
+      .done(function(data) {
+        this.setState({myShips: data.myShips});
+      }.bind(this));
 
-var GameList = React.createClass({
+  },
 
-  waitGame: function() {
-    var game = this.props.self.state.game;
+ waitFight: function() {
+
     var wait = setInterval(function() {
-        $.get('../game/' + game)
+        $.get('../game/' + this.state.game)
           .done(function(data) {
             if (data.game.users[0].status === 'ready'
              && data.game.users[1].status === 'ready') {
               clearInterval(wait);
-              this.props.self.setState({status: data.game.status});
+              this.setState({status: data.game.status});
             }
           }.bind(this));
     }.bind(this), 1000);
   },
 
-  handleClick: function(index) {
-
-    var user = this.props.self.state.user;
-    var games = this.props.self.state.games;
-    var game = games[index].id;
-
-    $.post('../users/' + user + '/game/' + game)
+  readyToFightClick: function() {
+    $.get('../users/' + this.state.user + '/game/' + this.state.game)
       .done(function(data) {
-        this.props.self.setState({game: data.game.id});
         if (data.game.users[0].status === 'ready'
          && data.game.users[1].status === 'ready') {
-           this.props.self.setState({status: data.game.status});
+           this.setState({status: data.game.status});
         } else {
-            this.props.self.setState({status: 'wait2nd'});
-            this.waitGame();
+            this.setState({status: 'wait2nd'});
+            this.waitFight();
         }
       }.bind(this));
   },
 
-  render: function() {
-    var games = this.props.self.state.games;
-    var liNodes = games.map(function(game, index) {
-      return (
-        <li onClick={this.handleClick.bind(this, index)}>{game}</li>
-      )
-    }.bind(this));
-    return (
-        <div>
-            <h4>Available games:</h4>
-            <ul>{liNodes}</ul>
-        </div>
-    )
-  }
- });
-
-var StartGame = React.createClass({
-
-  getInitialState: function() {
-     return {};
-   },
-
-  onChange: function(e) {
-    this.props.self.setState({user: e.target.value});
-  },
-
-  handleSubmit: function(e) {
-    if(e) e.preventDefault();
-    $.get('../users/' + this.props.self.state.user)
+  getGameList: function(user) {
+    $.get('../users/' + user)
       .done(function(data) {
-        this.props.self.setState({games : data.games});
-        console.log(this.props.self.state.games);
+        this.setState({games : data.games, user: user});
       }.bind(this));
   },
 
   createNewGame: function() {
-    $.post('../users/' + this.props.self.state.user)
+    $.post('../users/' + this.state.user)
       .done(function(data) {
-        this.handleSubmit();
+        this.getGameList(this.state.user);
       }.bind(this));
   },
 
-  render: function() {
-    return (
-      <div>
-        <form onSubmit={this.handleSubmit}>
-          <p>Enter your name:</p>
-          <input onChange={this.onChange} value={this.state.text} />
-          <button>Go!</button>
-        </form>
-        <div>
-          <button onClick={this.createNewGame}>Create new game</button>
-          <GameList self={this.props.self} />
-        </div>
-      </div>
-    );
-  }
- });
+  chooseGame: function(index) {
 
-var Cell = React.createClass({
-
-  handleClick: function(e) {
-    if (this.props.onClick) this.props.onClick(e);
-  },
-
-  render: function() {
-    return (
-      <div className={this.props.status + " cell"} onClick={this.handleClick}></div>
-    );
-  }
- });
-
-var Field = React.createClass({
-
-  handleCellClick: function(i, e) {
-    if (this.props.flag === 'inert') return;
-    $.post('../users/' + this.props.self.state.user + '/game/' + this.props.self.state.game + '/place/' + e)
+    $.post('../users/' + this.state.user + '/game/' + this.state.games[index].id)
       .done(function(data) {
-        this.props.self.setState({myShips: data.myShips});
-        console.log(data.myShips);
+        this.setState({game: data.game.id});
+        if (data.game.users[0].status === 'ready'
+         && data.game.users[1].status === 'ready') {
+           this.setState({status: data.game.status});
+        } else {
+            this.setState({status: 'wait2nd'});
+            this.waitFight();
+        }
       }.bind(this));
   },
+
 
   render: function() {
 
     var cellShips = [];
     var cell;
     for (var i = 0; i < 100; i++) {
-        cell = _.find(this.props.ships, {id: i.toString()}) || {id: i.toString(), status: 'void'};
-        cellShips.push(cell);
+        cell = _.find(this.state.myShips, {id: i.toString()}) || {id: i.toString(), status: 'void'};
+        cellShips.push(cell.status);
     };
 
-    var cellNodes = cellShips.map(function(item, index) {
-      return (
-        <Cell status={item.status} onClick={this.handleCellClick.bind(this, item, index)}/>
-      );
-    }.bind(this));
-
-    return (
-      <div className="field">
-        {cellNodes}
-      </div>
-    );
-  }
- });
-
-var ShipsPlacement = React.createClass({
-
-  waitFight: function() {
-    var game = this.props.self.state.game;
-
-    var wait = setInterval(function() {
-        $.get('../game/' + game)
-          .done(function(data) {
-            if (data.game.users[0].status === 'ready'
-             && data.game.users[1].status === 'ready') {
-              clearInterval(wait);
-              this.props.self.setState({status: data.game.status});
-            }
-          }.bind(this));
-    }.bind(this), 1000);
-  },
-
-
-  handleClick: function(index) {
-
-    var user = this.props.self.state.user;
-    var game = this.props.self.state.game;
-
-    $.get('../users/' + user + '/game/' + game)
-      .done(function(data) {
-        if (data.game.users[0].status === 'ready'
-         && data.game.users[1].status === 'ready') {
-           this.props.self.setState({status: data.game.status});
-        } else {
-            this.props.self.setState({status: 'wait2nd'});
-            this.waitFight();
-        }
-      }.bind(this));
-  },
-
-  render: function() {
-    return (
-        <div>
-            <button onClick={this.handleClick.bind(this)}>I am ready to fight!</button>
-            <Field self={this.props.self} ships = {this.props.self.state.myShips}/>
-        </div>
-    );
+    if (this.state.status === 'start') {
+        return <StartGame games={this.state.games}
+                          getGameList={this.getGameList}
+                          createNewGame={this.createNewGame}
+                          chooseGame={this.chooseGame}/>
+    } else if (this.state.status === 'wait2nd') {
+        return <div>Waiting 2nd player...</div>
+    } else if (this.state.status === 'placement') {
+        return <ShipsPlacement ships={cellShips}
+                               onFieldClick={this.putShip}
+                               readyToFight={this.readyToFightClick}/>
+    } else if (this.state.status === 'fight') {
+        return <BattleField self={this} />
+    }
   }
  });
 
