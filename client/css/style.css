@@ -3,23 +3,37 @@
     padding: 0;
 }
 
+button {
+    margin: 15px;
+}
+
 .field {
     height: 300px;
     width: 300px;
     border: 1px solid #888;
+    float: left;
+    margin: 30px;
+}
+
+.cell {
+    height: 28px;
+    width: 28px;
+    border: 1px solid #aaa;
+    float: left;
 }
 
 .void {
-    height: 28px;
-    width: 28px;
-    border: 1px solid #aaa;
-    float: left;
+
 }
 
 .ship {
-    height: 28px;
-    width: 28px;
-    border: 1px solid #aaa;
-    float: left;
     background: #888;
+}
+
+.wound {
+    background: #b66;
+}
+
+.miss {
+    background: #ccc;
 }

@@ -74,7 +74,7 @@ function getGameForClienr(game, name) {
     var enemyShip;
     var clientStatusGame;
 
-    if (game.status !== 'fight' && (me && me.status || enemy && enemy.status)) {
+    if (me && me.status) {
         clientStatusGame = 'wait2nd';
     } else {
         clientStatusGame = game.status;
@@ -84,9 +84,20 @@ function getGameForClienr(game, name) {
 
         myShip    = me    ? me.ships.indexOf(i.toString())    : null;
         enemyShip = enemy ? enemy.ships.indexOf(i.toString()) : null;
+        myMove    = me    ? me.moves.indexOf(i.toString())    : null;
+        enemyMove = enemy ? enemy.moves.indexOf(i.toString()) : null;
 
-        if (me)    myField.push(    myShip    !== -1 ? 'ship' : 'void');
-        if (enemy) enemyField.push( enemyShip !== -1 ? 'ship' : 'void');
+        if (me) myField.push(
+                myShip !== -1 ?
+                    enemyMove !== -1 ? 'wound' : 'ship'
+                :
+                    enemyMove !== -1 ? 'miss' : 'void'
+                );
+        if (enemy) enemyField.push(
+                myMove !== -1 ?
+                    enemyShip !== -1 ? 'wound' : 'miss'
+                : 'void'
+            );
     };
 
     return {
@@ -100,7 +111,7 @@ function getGameForClienr(game, name) {
         myField         :         myField,
         enemyField      :         enemyField
     };
- };
+ }
 
 function wanaPutShip(ships, place) {
 
@@ -202,6 +213,17 @@ function wanaPutShip(ships, place) {
         return {ships: ships, shipsAarr: _.omit(shipsAarr(ships), '5'), status: 'OK'};
     }
  };
+
+function wanaPutMove(moves, ships, place) {
+    if (moves.indexOf(place) === -1) {
+        moves.push(place);
+        if (ships.indexOf(place) === -1) {
+            return {moves: moves, move: 'miss'};
+        } else {
+            return {moves: moves, move: 'wound'};
+        }
+    }
+ }
 // getGameList
 app.get('/users/:name', function(req, res) {
    // Games.remove(null,
@@ -273,8 +295,12 @@ app.post('/users/:name/game/:game', function(req, res) {
         if (!enemy.status) {
             me.status = 'ready'
         } else {
-            game.status = game.status || 'placement';
             enemy.status = null;
+            !game.status ? game.status = 'placement'
+                :
+                game.status === 'placement' ? game.status = 'fight'
+                    :
+                    null;
         }
 
         game.save(function(err) {
@@ -313,22 +339,29 @@ app.post('/users/:name/game/:game/place/:place', function(req, res) {
 
         var me = getMe(game, name);
         var enemy = getEnemy(game, name);
-        var putShip = wanaPutShip(me.ships, place);
+        var putShip;
+        var putMove;
 
         if (game.status === 'placement') {
+            putShip = wanaPutShip(_.clone(me.ships), place);
             me.ships = putShip.ships;
             me.err = _.omit(putShip, 'ships');
         }
 
         if (game.status === 'fight') {
-            if (me.moves.indexOf(place) === -1) {
-                me.moves.push(place);
+            if (me === game.users[game.curMove]) {
+                putMove = wanaPutMove(me.moves, enemy.ships, place);
+                me.moves = putMove.moves;
+                if (putMove.move === 'miss') {
+                    game.curMove = 1 - game.curMove;
+                    me.err = {status: 'enemyMove'};
+                    enemy.err = {status: 'myMove'};
+                }
             }
         }
 
         game.save(function(err) {
             if (!err) {
-                log.info("ships updated");
                 return res.send({ status: 'OK', game: getGameForClienr(game, name)});
             } else {
                 res.statusCode = 500;
@@ -349,6 +382,8 @@ app.get('/users/:name/game/:game', function(req, res) {
 
         var me = getMe(game, name);
         var enemy = getEnemy(game, name);
+
+        game.curMove = Math.floor(Math.random()*2);
 
         if (!enemy.status) {
             me.status = 'ready'

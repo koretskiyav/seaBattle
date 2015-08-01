@@ -14,19 +14,20 @@ var StartGame = React.createClass({
   },
 
   render: function() {
-    return (
-      <div>
-        <form onSubmit={this.getGameList}>
-          <p>Enter your name:</p>
-          <input onChange={this.onChange} value={this.state.text} />
-          <button>Go!</button>
-        </form>
-        <div>
-          <button onClick={this.props.createNewGame}>Create new game</button>
-          <GameList games={this.props.games}
-                    chooseGame={this.props.chooseGame} />
-        </div>
-      </div>
-    );
-  }
+    if (this.props.haveName) {
+        return <div>
+                <button onClick={this.props.createNewGame}>Create new game</button>
+                <GameList games={this.props.games}
+                          chooseGame={this.props.chooseGame} />
+            </div>
+    } else {
+        return <div>
+            <form onSubmit={this.getGameList}>
+                <span>Enter your name: </span>
+                <input onChange={this.onChange} value={this.state.text} />
+                <button>Go!</button>
+            </form>
+            </div>
+        }
+    }
  });

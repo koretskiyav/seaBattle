@@ -11,9 +11,10 @@ var GlobalDiv = React.createClass({
   },
 
   getGameList: function(user) {
+    this.setState({user: user});
     $.get('../users/' + user)
       .done(function(data) {
-        this.setState({games : data.games, user: user});
+        this.setState({games : data.games});
       }.bind(this));
   },
 
@@ -34,25 +35,40 @@ var GlobalDiv = React.createClass({
       }.bind(this));
   },
 
- waitGame: function() {
-    var wait = setInterval(function() {
-        $.get('../game/' + this.state.game.id + '/users/' + this.state.user)
-          .done(function(data) {
-            this.setState({game: data.game});
-        if (this.state.game.status !== 'wait2nd') {
-              clearInterval(wait);
-            }
-          }.bind(this));
-    }.bind(this), 1000);
-  },
+    waitGame: function() {
+        var wait = setInterval(function() {
+            $.get('../game/' + this.state.game.id + '/users/' + this.state.user)
+                .done(function(data) {
+                    this.setState({game: data.game});
+                    if (this.state.game.status !== 'wait2nd') {
+                        clearInterval(wait);
+                    }
+                }.bind(this));
+        }.bind(this), 1000);
+     },
 
-  putShip: function(index) {
-    $.post('../users/' + this.state.user + '/game/' + this.state.game.id + '/place/' + index)
-      .done(function(data) {
-          this.setState({game: data.game});
-          console.log(this.state.game.myErr);
-      }.bind(this));
-  },
+
+    waitMyMove: function() {
+        var wait = setInterval(function() {
+            $.get('../game/' + this.state.game.id + '/users/' + this.state.user)
+                .done(function(data) {
+                    this.setState({game: data.game});
+                    if (this.state.game.myErr.status === 'myMove') {
+                        clearInterval(wait);
+                    }
+                }.bind(this));
+        }.bind(this), 1000);
+     },
+
+    putShip: function(index) {
+        $.post('../users/' + this.state.user + '/game/' + this.state.game.id + '/place/' + index)
+            .done(function(data) {
+                this.setState({game: data.game});
+                    if (this.state.game.status === 'fight' && this.state.game.myErr.status === 'enemyMove') {
+                        this.waitMyMove();
+                    }
+            }.bind(this));
+      },
 
   readyToFightClick: function() {
     $.get('../users/' + this.state.user + '/game/' + this.state.game.id)
@@ -67,6 +83,7 @@ var GlobalDiv = React.createClass({
   render: function() {
     if (!this.state.game || !this.state.game.status) {
         return <StartGame games          = {this.state.games}
+                          haveName       = {!!this.state.user}
                           getGameList    = {this.getGameList}
                           createNewGame  = {this.createNewGame}
                           chooseGame     = {this.chooseGame}/>

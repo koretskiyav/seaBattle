@@ -18,6 +18,7 @@ var Schema = mongoose.Schema;
 // Schemas
 var gameSchema = new Schema({
     status: String,
+    curMove: Number,
     users: [{
         name: String,
         status: String,
