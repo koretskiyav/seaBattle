@@ -28,7 +28,6 @@ var GlobalDiv = React.createClass({
     $.post('../users/' + this.state.user + '/game/' + this.state.games[index].id)
       .done(function(data) {
         this.setState({game: data.game});
-        console.log(this.state.game.status);
         if (this.state.game.status === 'wait2nd') {
             this.waitGame();
         }
@@ -51,7 +50,7 @@ var GlobalDiv = React.createClass({
     $.post('../users/' + this.state.user + '/game/' + this.state.game.id + '/place/' + index)
       .done(function(data) {
           this.setState({game: data.game});
-          console.log(data.moves);
+          console.log(this.state.game.myErr);
       }.bind(this));
   },
 
@@ -76,7 +75,8 @@ var GlobalDiv = React.createClass({
     } else if (this.state.game.status === 'placement') {
         return <ShipsPlacement ships         = {this.state.game.myField}
                                onFieldClick  = {this.putShip}
-                               readyToFight  = {this.readyToFightClick}/>
+                               readyToFight  = {this.readyToFightClick}
+                               myErr         = {this.state.game.myErr} />
     } else if (this.state.game.status === 'fight') {
         return <BattleField myField       = {this.state.game.myField}
                             enemyField    = {this.state.game.enemyField}

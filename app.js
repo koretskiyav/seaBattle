@@ -96,11 +96,112 @@ function getGameForClienr(game, name) {
         enemyName       : enemy ? enemy.name        : null,
         myStatus        : me    ? me.status         : null,
         enemyStatus     : enemy ? enemy.status      : null,
+        myErr           : me    ? me.err            : null,
         myField         :         myField,
         enemyField      :         enemyField
     };
  };
 
+function wanaPutShip(ships, place) {
+
+    var v = place % 10;
+    var h = (place - v) / 10;
+    var oldShips = _.clone(ships);
+
+    function isShip(ships, h, v) {
+        return ships.indexOf((+('' + h + v)).toString()) !== -1
+     }
+
+    if (!isShip(ships, h, v) &&
+        !isShip(ships, h - 1, v - 1) &&
+        !isShip(ships, h + 1, v - 1) &&
+        !isShip(ships, h - 1, v + 1) &&
+        !isShip(ships, h + 1, v + 1)) {
+        ships.push(place);
+    } else if (isShip(ships, h, v)) {
+        ships = _.without(ships, place);
+    }
+
+    function shipsAarr(ships) {
+
+        var v = '';
+        var h = '';
+
+        for (var i = 0; i < 10; i++) {
+            v = v + '|_';
+            h = h + '|_';
+            for (var j = 0; j < 10; j++) {
+                if (isShip(ships, j, i)) {
+                    v = v + 'X';
+                } else {
+                    v = v + '_';
+                }
+
+                if (isShip(ships, i, j)) {
+                    h = h + 'X';
+                } else {
+                    h = h + '_';
+                }
+            }
+            v = v + '_|';
+            h = h + '_|';
+        }
+
+
+        var target;
+        var pos;
+        var ver = {total: 0};
+        var hor = {total: 0};
+
+        for (var i = 1; i < 6; i++) {
+            target = '_' + _.repeat('X', i) + '_';
+            pos = -1;
+            while ((pos = v.indexOf(target, pos + 1)) != -1) {
+                ver[i] ? ver[i]++ : ver[i] = 1;
+                if (i > 1) ver.total += i;
+            }
+        };
+
+        for (var i = 1; i < 6; i++) {
+            target = '_' + _.repeat('X', i) + '_';
+            pos = -1;
+            while ((pos = h.indexOf(target, pos + 1)) != -1) {
+                hor[i] ? hor[i]++ : hor[i] = 1;
+                if (i > 1) hor.total += i;
+            }
+        };
+
+        ver[1] ? ver[1] -= hor.total : null;
+
+        var shipsAsObj = {};
+
+        for (var i = 1; i < 6; i++) {
+                shipsAsObj[i] = ver[i] || 0;
+            if (i !== 1) {
+                shipsAsObj[i] += hor[i] || 0;
+            }
+        };
+        return shipsAsObj;
+     }
+
+    if (shipsAarr(ships)[5] > 0 || _.isEqual(ships, oldShips)) {
+        return {ships: oldShips, shipsAarr: _.omit(shipsAarr(oldShips), '5'), status: 'err'};
+    } else if (
+        shipsAarr(ships)[1] === 4 &&
+        shipsAarr(ships)[2] === 3 &&
+        shipsAarr(ships)[3] === 2 &&
+        shipsAarr(ships)[4] === 1) {
+        return {ships: ships, shipsAarr: _.omit(shipsAarr(ships), '5'), status: 'ready'};
+    } else if (
+        shipsAarr(ships)[1] > 4 ||
+        shipsAarr(ships)[2] > 3 ||
+        shipsAarr(ships)[3] > 2 ||
+        shipsAarr(ships)[4] > 1) {
+        return {ships: ships, shipsAarr: _.omit(shipsAarr(ships), '5'), status: 'warn'};
+    } else {
+        return {ships: ships, shipsAarr: _.omit(shipsAarr(ships), '5'), status: 'OK'};
+    }
+ };
 // getGameList
 app.get('/users/:name', function(req, res) {
    // Games.remove(null,
@@ -212,13 +313,11 @@ app.post('/users/:name/game/:game/place/:place', function(req, res) {
 
         var me = getMe(game, name);
         var enemy = getEnemy(game, name);
+        var putShip = wanaPutShip(me.ships, place);
 
         if (game.status === 'placement') {
-            if (me.ships.indexOf(place) !== -1) {
-                me.ships = _.without(me.ships, place);
-            } else {
-                me.ships.push(place);
-            }
+            me.ships = putShip.ships;
+            me.err = _.omit(putShip, 'ships');
         }
 
         if (game.status === 'fight') {
@@ -230,7 +329,7 @@ app.post('/users/:name/game/:game/place/:place', function(req, res) {
         game.save(function(err) {
             if (!err) {
                 log.info("ships updated");
-                return res.send({ status: 'OK', game: getGameForClienr(game, name), moves: me.moves});
+                return res.send({ status: 'OK', game: getGameForClienr(game, name)});
             } else {
                 res.statusCode = 500;
                 res.send({ error: 'Server error' });
@@ -275,3 +374,4 @@ app.get('/users/:name/game/:game', function(req, res) {
 app.listen(config.get('port'), function(){
     log.info('Express server listening on port ' + config.get('port'));
  });
+

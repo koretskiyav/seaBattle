@@ -22,7 +22,8 @@ var gameSchema = new Schema({
         name: String,
         status: String,
         ships: [String],
-        moves: [String]
+        moves: [String],
+        err: {}
     }]
 });
 
