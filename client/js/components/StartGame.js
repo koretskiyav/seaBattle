@@ -15,13 +15,13 @@ var StartGame = React.createClass({
 
   render: function() {
     if (this.props.haveName) {
-        return <div>
+        return <div className="GlobalDiv">
                 <button onClick={this.props.createNewGame}>Create new game</button>
                 <GameList games={this.props.games}
                           chooseGame={this.props.chooseGame} />
             </div>
     } else {
-        return <div>
+        return <div className="GlobalDiv">
             <form onSubmit={this.getGameList}>
                 <span>Enter your name: </span>
                 <input onChange={this.onChange} value={this.state.text} />

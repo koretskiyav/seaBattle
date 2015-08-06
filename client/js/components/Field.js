@@ -12,10 +12,9 @@ var Field = React.createClass({
       );
     }.bind(this));
 
-    return (
-      <div className="field">
-        {cellNodes}
-      </div>
-    );
-  }
+    return  <div className="bigField">
+                <h3>{this.props.title}</h3>
+                <div className="field">{cellNodes}</div>
+            </div>
+    }
  });

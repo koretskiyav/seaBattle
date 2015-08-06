@@ -16,15 +16,20 @@ db.once('open', function callback () {
 var Schema = mongoose.Schema;
 
 // Schemas
+
+// var arr = new Schema({
+
+// })
+
 var gameSchema = new Schema({
     status: String,
     curMove: Number,
     users: [{
         name: String,
         status: String,
-        ships: [String],
+        field: [Schema.Types.Mixed],
         moves: [String],
-        err: {}
+        err: String
     }]
 });
 

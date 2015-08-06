@@ -21,7 +21,10 @@ var GlobalDiv = React.createClass({
   createNewGame: function() {
     $.post('../users/' + this.state.user)
       .done(function(data) {
-        this.getGameList(this.state.user);
+        this.setState({game: data.game});
+        if (this.state.game.status === 'wait2nd') {
+            this.waitGame();
+        }
       }.bind(this));
   },
 
@@ -42,6 +45,11 @@ var GlobalDiv = React.createClass({
                     this.setState({game: data.game});
                     if (this.state.game.status !== 'wait2nd') {
                         clearInterval(wait);
+                        if (this.state.game.status === 'fight' &&
+                            this.state.game.curMove === 'enemy')
+                        {
+                            this.waitMyMove();
+                        }
                     }
                 }.bind(this));
         }.bind(this), 1000);
@@ -53,7 +61,8 @@ var GlobalDiv = React.createClass({
             $.get('../game/' + this.state.game.id + '/users/' + this.state.user)
                 .done(function(data) {
                     this.setState({game: data.game});
-                    if (this.state.game.myErr.status === 'myMove') {
+                    if (this.state.game.curMove === 'me')
+                    {
                         clearInterval(wait);
                     }
                 }.bind(this));
@@ -61,10 +70,18 @@ var GlobalDiv = React.createClass({
      },
 
     putShip: function(index) {
+        if (this.state.game.status === 'placement') {
+            this.state.game.myField[index] = 'wait';
+        } else {
+            this.state.game.enemyField[index] = 'wait';
+        }
+        this.setState({game: this.state.game});
         $.post('../users/' + this.state.user + '/game/' + this.state.game.id + '/place/' + index)
             .done(function(data) {
                 this.setState({game: data.game});
-                    if (this.state.game.status === 'fight' && this.state.game.myErr.status === 'enemyMove') {
+                    if (this.state.game.status === 'fight' &&
+                        this.state.game.curMove === 'enemy')
+                    {
                         this.waitMyMove();
                     }
             }.bind(this));
@@ -88,7 +105,7 @@ var GlobalDiv = React.createClass({
                           createNewGame  = {this.createNewGame}
                           chooseGame     = {this.chooseGame}/>
     } else if (this.state.game.status === 'wait2nd') {
-        return <div>Waiting 2nd player...</div>
+        return <div className="GlobalDiv">Waiting 2nd player...</div>
     } else if (this.state.game.status === 'placement') {
         return <ShipsPlacement ships         = {this.state.game.myField}
                                onFieldClick  = {this.putShip}
@@ -97,7 +114,8 @@ var GlobalDiv = React.createClass({
     } else if (this.state.game.status === 'fight') {
         return <BattleField myField       = {this.state.game.myField}
                             enemyField    = {this.state.game.enemyField}
-                            onFieldClick  = {this.putShip} />
+                            onFieldClick  = {this.putShip}
+                            myErr         = {this.state.game.myErr} />
     }
   }
  });
