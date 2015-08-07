@@ -35,7 +35,10 @@ function putShip(req, res) {
             enemy.err = 'Time to move!';
         }
 
-        if (me.err === 'YOU WIN') enemy.err = 'YOU LOSE';
+        if (me.err === 'YOU WIN') {
+            enemy.err = 'YOU LOSE';
+            game.status = 'done'
+        }
 
         game.markModified('users');
 

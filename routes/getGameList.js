@@ -15,7 +15,11 @@ function getGameList(req, res) {
     function (err, Games) {
         if (!err) {
            var games = _.compact(Games.map(function(game) {
-                return utils.getMe(game, name) || utils.getEmpty(game,name) ? getGameForClienr(game, name) : null;
+                if (game.status !== 'done' &&
+                    (utils.getMe(game, name) || utils.getEmpty(game,name))
+                    ) {
+                        return getGameForClienr(game, name);
+                    }
             }));
             return res.send({ status: 'OK', games: games});
         } else {
