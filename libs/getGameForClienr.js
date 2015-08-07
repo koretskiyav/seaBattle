@@ -75,7 +75,13 @@ function getGameForClienr(game, name) {
 
     var curMove     = game.users[game.curMove] === me ? 'me' : 'enemy';
 
-    var clientStatusGame = me && me.status === 'ready' ? 'wait2nd' : game.status;
+    var clientStatusGame = game.status;
+
+    if (me && me.status === 'ready') {
+        clientStatusGame = 'wait2nd';
+    } else if (game.status === 'done') {
+        clientStatusGame = 'fight';
+    }
 
     for (var i = 0; i < 10; i++) {
         for (var j = 0; j < 10; j++) {
