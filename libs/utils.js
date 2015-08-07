@@ -1,5 +1,6 @@
-var _  = require('lodash');
-var Games = require('./mongoose').Games;
+var _                   = require('lodash');
+var Games               = require('./mongoose').Games;
+var log                 = require('./log')(module);
 
 function resetUsersStatuses() {
     Games.find(null,

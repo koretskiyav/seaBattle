@@ -15,12 +15,6 @@ db.once('open', function callback () {
 
 var Schema = mongoose.Schema;
 
-// Schemas
-
-// var arr = new Schema({
-
-// })
-
 var gameSchema = new Schema({
     status: String,
     curMove: Number,
