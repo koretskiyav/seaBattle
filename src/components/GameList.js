@@ -1,13 +1,15 @@
-var GameList = React.createClass({
+import React, { Component, PropTypes } from 'react';
 
-  handleClick: function(index) {
+export default class GameList extends Component {
+
+  handleClick(index) {
     this.props.chooseGame(index);
-  },
+  }
 
-  render: function() {
+  render() {
     var liNodes = this.props.games.map(function(game, index) {
       return (
-        <li>
+        <li key={index}>
             {                                       'game: '     + game.id                      }
             {game.status                          ? ', status: ' + game.status            : null}
             {game.myName                          ? ', me: '     + game.myName            : null}
@@ -25,4 +27,4 @@ var GameList = React.createClass({
         </div>
     )
   }
- });
+ }

@@ -1,10 +1,14 @@
-var Field = React.createClass({
+import React, { Component, PropTypes } from 'react';
 
-  handleCellClick: function(index) {
+import Cell from 'components/Cell';
+
+export default class Field extends Component {
+
+  handleCellClick(index) {
     if (this.props.onClick) this.props.onClick(index);
-  },
+  }
 
-  render: function() {
+  render() {
     var cellNodes = this.props.ships.map(function(status, index) {
       return (
         <Cell status={status}
@@ -17,4 +21,4 @@ var Field = React.createClass({
                 <div className="field">{cellNodes}</div>
             </div>
     }
- });
+ }

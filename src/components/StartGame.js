@@ -1,19 +1,19 @@
-var StartGame = React.createClass({
+import React, { Component, PropTypes } from 'react';
 
-   getInitialState: function() {
-     return {};
-   },
+import GameList from 'components/GameList';
 
-  onChange: function(e) {
-    this.setState({user: e.target.value});
-  },
+export default class StartGame extends Component {
 
-  getGameList: function(e) {
+   state = {};
+
+  onChange = e => this.setState({ user: e.target.value });
+
+  getGameList = e => {
     e.preventDefault();
     this.props.getGameList(this.state.user);
-  },
+  };
 
-  render: function() {
+  render() {
     if (this.props.haveName) {
         return <div className="GlobalDiv">
                 <button onClick={this.props.createNewGame}>Create new game</button>
@@ -30,4 +30,4 @@ var StartGame = React.createClass({
             </div>
         }
     }
- });
+ }

@@ -1,40 +1,40 @@
-var mountNode = document.getElementById('content');
+import React, { Component, PropTypes } from 'react';
+import $ from 'jquery';
 
-var GlobalDiv = React.createClass({
+import StartGame from 'components/StartGame';
+import ShipsPlacement from 'components/ShipsPlacement';
+import BattleField from 'components/BattleField';
 
-    getInitialState: function() {
-        return {
-            user: '',
-            game: '',
-            games: [],
-        };
-    },
+export default class App extends Component {
 
-    getGameList: function(user) {
-        this.setState({user: user});
-        $.get('../users/' + user)
-            .done(function(data) {
-                this.setState({games : data.games});
-            }.bind(this));
-    },
+  state = {
+    user: '',
+    game: '',
+    games: [],
+  };
 
-    createNewGame: function() {
+  getGameList = user => {
+    this.setState({ user });
+    $.get(`../users/${user}`).done(({ games }) => this.setState({ games }));
+  };
+
+    createNewGame = () => {
         $.post('../users/' + this.state.user)
             .done(function(data) {
                 this.setState({game: data.game});
                 if (this.state.game.status === 'wait2nd') this.waitGame();
             }.bind(this));
-    },
+    };
 
-    chooseGame: function(index) {
+    chooseGame = index => {
         $.post('../users/' + this.state.user + '/game/' + this.state.games[index].id)
             .done(function(data) {
                 this.setState({game: data.game});
                 if (this.state.game.status === 'wait2nd') this.waitGame();
             }.bind(this));
-    },
+    };
 
-    waitGame: function() {
+    waitGame = () => {
         var wait = setInterval(function() {
             $.get('../game/' + this.state.game.id + '/users/' + this.state.user)
                 .done(function(data) {
@@ -43,9 +43,9 @@ var GlobalDiv = React.createClass({
                     if (this.state.game.status === 'fight') this.waitMyMove();
                 }.bind(this));
         }.bind(this), 1000);
-    },
+    };
 
-    putShip: function(index) {
+    putShip = (index) => {
 
         if (this.state.game.status === 'placement') {
             this.state.game.myField[index] = 'wait';
@@ -60,18 +60,18 @@ var GlobalDiv = React.createClass({
                 this.setState({game: data.game});
                 if (this.state.game.status === 'fight') this.waitMyMove();
             }.bind(this));
-      },
+      };
 
-    readyToFightClick: function() {
+    readyToFightClick = () => {
         $.get('../users/' + this.state.user + '/game/' + this.state.game.id)
             .done(function(data) {
                 this.setState({game: data.game});
                 if (data.game.status === 'wait2nd') this.waitGame();
                 if (this.state.game.status === 'fight') this.waitMyMove();
             }.bind(this));
-    },
+    };
 
-    waitMyMove: function() {
+    waitMyMove = () => {
         var wait = setInterval(function() {
             $.get('../game/' + this.state.game.id + '/users/' + this.state.user)
                 .done(function(data) {
@@ -79,9 +79,9 @@ var GlobalDiv = React.createClass({
                     if (this.state.game.curMove === 'me') clearInterval(wait);
                 }.bind(this));
         }.bind(this), 1000);
-    },
+    };
 
-    render: function() {
+    render() {
         if (!this.state.game || !this.state.game.status) {
             return <StartGame games          = {this.state.games}
                               haveName       = {!!this.state.user}
@@ -102,6 +102,4 @@ var GlobalDiv = React.createClass({
                                 myErr         = {this.state.game.myErr} />
         }
     }
-});
-
-React.render(<GlobalDiv />, mountNode);
+}

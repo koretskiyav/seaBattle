@@ -1,6 +1,10 @@
-var ShipsPlacement = React.createClass({
+import React, { Component, PropTypes } from 'react';
 
-  render: function() {
+import Field from 'components/Field';
+
+export default class ShipsPlacement extends Component {
+
+  render() {
     return (
         <div className="GlobalDiv">
             {this.props.myErr ?
@@ -17,4 +21,4 @@ var ShipsPlacement = React.createClass({
         </div>
     );
   }
- });
+ }
