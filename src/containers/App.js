@@ -1,105 +1,122 @@
 import React, { Component, PropTypes } from 'react';
-import $ from 'jquery';
+const { string, array, object, bool, func } = PropTypes;
+import { connect } from 'react-redux';
 
-import StartGame from 'components/StartGame';
-import ShipsPlacement from 'components/ShipsPlacement';
-import BattleField from 'components/BattleField';
+import { StartGame, ShipsPlacement, BattleField } from 'components';
+import { setUser } from 'redux/modules/user';
+import { load as loadGameList } from 'redux/modules/games';
+import {
+  create as createGame,
+  choose as chooseGame,
+  ready as readyToFight,
+  load as loadGame,
+  move as moveGame,
+} from 'redux/modules/currentGame';
 
+@connect(
+  store => ({
+    user: store.user,
+    games: store.games.data,
+    currentGame: store.currentGame.data,
+    loading: store.currentGame.loading,
+  }),
+  {
+    loadGameList,
+    setUser,
+    createGame,
+    chooseGame,
+    readyToFight,
+    loadGame,
+    moveGame,
+  },
+)
 export default class App extends Component {
 
-  state = {
-    user: '',
-    game: '',
-    games: [],
+  static propTypes = {
+    user: string.isRequired,
+    games: array.isRequired,
+    currentGame: object.isRequired,
+    loading: bool.isRequired,
+    setUser: func.isRequired,
+    loadGameList: func.isRequired,
+    createGame: func.isRequired,
+    chooseGame: func.isRequired,
+    readyToFight: func.isRequired,
+    loadGame: func.isRequired,
+    moveGame: func.isRequired,
   };
 
-  getGameList = user => {
-    this.setState({ user });
-    $.get(`../users/${user}`).done(({ games }) => this.setState({ games }));
+  componentWillReceiveProps = nextProps => {
+    if (this.props.loading && !nextProps.loading) {
+      const user = this.props.user;
+      const { status, curMove, id: gameId } = nextProps.currentGame;
+      if (status === 'wait2nd' || (status === 'fight' && curMove !== 'me')) {
+        setTimeout(() => this.props.loadGame(gameId, user), 1000);
+      }
+    }
+  }
+
+  getGameList = (user) => {
+    this.props.setUser(user);
+    this.props.loadGameList(user);
   };
 
-    createNewGame = () => {
-        $.post('../users/' + this.state.user)
-            .done(function(data) {
-                this.setState({game: data.game});
-                if (this.state.game.status === 'wait2nd') this.waitGame();
-            }.bind(this));
-    };
+  createGame = () => {
+    this.props.createGame(this.props.user);
+  };
 
-    chooseGame = index => {
-        $.post('../users/' + this.state.user + '/game/' + this.state.games[index].id)
-            .done(function(data) {
-                this.setState({game: data.game});
-                if (this.state.game.status === 'wait2nd') this.waitGame();
-            }.bind(this));
-    };
+  chooseGame = (index) => {
+    const { user, games } = this.props;
+    this.props.chooseGame(games[index].id, user);
+  };
 
-    waitGame = () => {
-        var wait = setInterval(function() {
-            $.get('../game/' + this.state.game.id + '/users/' + this.state.user)
-                .done(function(data) {
-                    this.setState({game: data.game});
-                    if (this.state.game.status !== 'wait2nd') clearInterval(wait);
-                    if (this.state.game.status === 'fight') this.waitMyMove();
-                }.bind(this));
-        }.bind(this), 1000);
-    };
+  readyToFightClick = () => {
+    const { user, currentGame: { id } } = this.props;
+    this.props.readyToFight(id, user);
+  };
 
-    putShip = (index) => {
-
-        if (this.state.game.status === 'placement') {
-            this.state.game.myField[index] = 'wait';
-        } else {
-            this.state.game.enemyField[index] = 'wait';
-        }
-
-        this.setState({game: this.state.game});
-
-        $.post('../users/' + this.state.user + '/game/' + this.state.game.id + '/place/' + index)
-            .done(function(data) {
-                this.setState({game: data.game});
-                if (this.state.game.status === 'fight') this.waitMyMove();
-            }.bind(this));
-      };
-
-    readyToFightClick = () => {
-        $.get('../users/' + this.state.user + '/game/' + this.state.game.id)
-            .done(function(data) {
-                this.setState({game: data.game});
-                if (data.game.status === 'wait2nd') this.waitGame();
-                if (this.state.game.status === 'fight') this.waitMyMove();
-            }.bind(this));
-    };
-
-    waitMyMove = () => {
-        var wait = setInterval(function() {
-            $.get('../game/' + this.state.game.id + '/users/' + this.state.user)
-                .done(function(data) {
-                    this.setState({game: data.game});
-                    if (this.state.game.curMove === 'me') clearInterval(wait);
-                }.bind(this));
-        }.bind(this), 1000);
-    };
+  putShip = (place) => {
+    const { user, currentGame: { id } } = this.props;
+    this.props.moveGame(id, user, place);
+  };
 
     render() {
-        if (!this.state.game || !this.state.game.status) {
-            return <StartGame games          = {this.state.games}
-                              haveName       = {!!this.state.user}
-                              getGameList    = {this.getGameList}
-                              createNewGame  = {this.createNewGame}
-                              chooseGame     = {this.chooseGame}/>
-        } else if (this.state.game.status === 'wait2nd') {
-            return <div className="GlobalDiv">Waiting 2nd player...</div>
-        } else if (this.state.game.status === 'placement') {
-            return <ShipsPlacement ships         = {this.state.game.myField}
-                                   onFieldClick  = {this.putShip}
-                                   readyToFight  = {this.readyToFightClick}
-                                   myErr         = {this.state.game.myErr} />
-        } else if (this.state.game.status === 'fight') {
-            return <BattleField myField       = {this.state.game.myField}
-                                enemyField    = {this.state.game.enemyField}
-                                onFieldClick  = {this.putShip}
-                                myErr         = {this.state.game.myErr} />
-        }
+      const { user, games, currentGame } = this.props;
+      const { status, myField, enemyField, myErr } = currentGame;
+
+      console.log(this.props);
+      if (!currentGame || !status) {
+        return (
+            <StartGame
+              games = {games}
+              haveName = {!!user}
+              getGameList = {this.getGameList}
+              createGame = {this.createGame}
+              chooseGame = {this.chooseGame}
+            />
+        );
+      } else if (status === 'wait2nd') {
+        return (
+          <div className="GlobalDiv">Waiting 2nd player...</div>
+        );
+      } else if (status === 'placement') {
+        return (
+          <ShipsPlacement
+            ships = {myField}
+            onFieldClick = {this.putShip}
+            readyToFight = {this.readyToFightClick}
+            myErr = {myErr}
+          />
+        );
+      } else if (status === 'fight') {
+        return (
+          <BattleField
+            myField = {myField}
+            enemyField = {enemyField}
+            onFieldClick = {this.putShip}
+            myErr = {myErr}
+          />
+        );
+      }
     }
 }

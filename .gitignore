@@ -1,4 +1,3 @@
 
 node_modules
-views
-client/js/libs
+public/build

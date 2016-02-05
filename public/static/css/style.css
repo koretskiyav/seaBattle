@@ -53,6 +53,7 @@ h3 {
     width: 340px;
     border: 1px solid #888;
     background-image: url(../img/field.jpg);
+    box-shadow: 5px 5px 20px rgba(0,0,0,.5);
 }
 
 .cell {

@@ -16,7 +16,7 @@ export default class StartGame extends Component {
   render() {
     if (this.props.haveName) {
         return <div className="GlobalDiv">
-                <button onClick={this.props.createNewGame}>Create new game</button>
+                <button onClick={this.props.createGame}>Create new game</button>
                 <GameList games={this.props.games}
                           chooseGame={this.props.chooseGame} />
             </div>
