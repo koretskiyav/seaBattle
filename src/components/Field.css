@@ -1,0 +1,12 @@
+.wrapper {
+  float: left;
+  margin-right: 30px;
+}
+
+.field {
+    height: 340px;
+    width: 340px;
+    border: 1px solid #888;
+    background-image: #aaa;
+    box-shadow: 5px 5px 20px rgba(0,0,0,.5);
+}

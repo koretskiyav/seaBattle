@@ -14,25 +14,9 @@ button {
     margin: 15px;
 }
 
-p {
-
-}
-
-.GlobalDiv {
-    width: 960px;
-    height: 480px;
-    margin: auto;
-    vertical-align: center;
-}
-
 .msg {
     font-size: 18px;
     color: #944;
-}
-
-.GameList li{
-    list-style-type: none;
-    margin: 2px;
 }
 
 .join {
@@ -40,28 +24,10 @@ p {
     margin-left: 10px;
 }
 
-.bigField {
-    float: left;
-    margin-right: 30px;
-}
-
 h3 {
     text-align: center;
 }
-.field {
-    height: 340px;
-    width: 340px;
-    border: 1px solid #888;
-    background-image: url(../img/field.jpg);
-    box-shadow: 5px 5px 20px rgba(0,0,0,.5);
-}
 
-.cell {
-    height: 32px;
-    width: 32px;
-    border: 1px solid #aaf;
-    float: left;
-}
 
 .void {
 

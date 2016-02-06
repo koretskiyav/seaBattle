@@ -1,24 +1,36 @@
 import React, { Component, PropTypes } from 'react';
+const { string, array, func } = PropTypes;
+import cssModules from 'react-css-modules';
+import styles from './Field.css';
 
 import Cell from 'components/Cell';
 
+@cssModules(styles)
 export default class Field extends Component {
 
-  handleCellClick(index) {
-    if (this.props.onClick) this.props.onClick(index);
-  }
+  static propTypes = {
+    title: string.isRequired,
+    ships: array.isRequired,
+    onClick: func.isRequired,
+  };
 
   render() {
-    var cellNodes = this.props.ships.map(function(status, index) {
-      return (
-        <Cell status={status}
-              onClick={this.handleCellClick.bind(this, index)} />
-      );
-    }.bind(this));
+    const { title, ships, onClick } = this.props;
 
-    return  <div className="bigField">
-                <h3>{this.props.title}</h3>
-                <div className="field">{cellNodes}</div>
-            </div>
-    }
+    return (
+      <div styleName="wrapper">
+        <h3>{title}</h3>
+        <div styleName="field">
+          {ships.map((status, index) => (
+            <Cell
+              key={index}
+              index={index}
+              status={status}
+              onClick={onClick}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
  }

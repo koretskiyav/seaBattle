@@ -84,7 +84,6 @@ export default class App extends Component {
       const { user, games, currentGame } = this.props;
       const { status, myField, enemyField, myErr } = currentGame;
 
-      console.log(this.props);
       if (!currentGame || !status) {
         return (
             <StartGame

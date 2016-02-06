@@ -1,4 +1,5 @@
 const path = require('path');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 const config = {
   entry: ['./src/client'],
@@ -8,15 +9,10 @@ const config = {
     publicPath: '/',
   },
   module: {
-    loaders: [{
-      test: /\.js$/,
-      loader: 'babel',
-      include: path.join(__dirname, 'src'),
-      query: {
-        stage: 0,
-        plugins: [],
-      },
-    }],
+    loaders: [
+      { test: /\.js$/, loader: 'babel', include: path.join(__dirname, 'src'), query: { stage: 0, plugins: [] }},
+      { test: /\.css$/, loader: ExtractTextPlugin.extract('style', 'css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]&sourceMap!autoprefixer?browsers=last 2 version') },
+    ],
   },
   resolve: {
     modulesDirectories: [
@@ -27,6 +23,9 @@ const config = {
   },
   devtool: 'eval',
   debug: true,
+  plugins: [
+    new ExtractTextPlugin('build/main.css', { allChunks: true }),
+  ],
 };
 
 module.exports = config;
