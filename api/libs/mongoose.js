@@ -1,8 +1,8 @@
 var mongoose    = require('mongoose');
-var config      = require('./config');
+var config      = require('../../src/config');
 var log         = require('./log')(module);
 
-mongoose.connect(config.get('mongoose:uri'));
+mongoose.connect(config.mongoose.uri);
 
 var db = mongoose.connection;
 
